@@ -167,11 +167,11 @@ col1, col2 = st.columns([1, 2])
 with col1:
     sampling_size = st.number_input("Sampling Size", min_value=1, value=10000, step=1000, format="%d")
 with col2:
-    button_clicked = st.button("Run Monte Carlo Simulation")
+    button_clicked = st.button("Setup Monte Carlo Simulation Parameters")
     if button_clicked:
         # run the simulation
         # TODO add a progress bar
-        st.write("Running Monte Carlo Simulation...")
+        st.write("Settingn up Monte Carlo Parameters...")
         # TODO add a button to stop the simulation
 
         whole_set = list()
