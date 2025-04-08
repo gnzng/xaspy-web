@@ -36,15 +36,39 @@ if uploaded_file is not None:
 
             with col2:
                 st.write("Plot:")
-                # Create properly formatted DataFrame for plotting
-                chart_data = data.set_index("energy")
+                # Create a Plotly figure for XAS and XMCD
+                fig = go.Figure()
 
-                # Plot with axis labels
-                st.line_chart(
-                    chart_data[["xas", "xmcd"]],
-                    use_container_width=True
+                # Add XAS trace
+                fig.add_trace(go.Scatter(
+                    x=data["energy"],
+                    y=data["xas"],
+                    mode='lines',
+                    name='XAS',
+                    line=dict(color='blue', width=2)
+                ))
+
+                # Add XMCD trace
+                fig.add_trace(go.Scatter(
+                    x=data["energy"],
+                    y=data["xmcd"],
+                    mode='lines',
+                    name='XMCD',
+                    line=dict(color='orange', width=2, dash='dash')
+                ))
+
+                # Update layout
+                fig.update_layout(
+                    title="XAS and XMCD Plot",
+                    xaxis_title="Energy (eV)",
+                    yaxis_title="Intensity",
+                    hovermode="x unified",
+                    template="plotly_white",
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
-                st.caption("Energy (eV) →")  # X-axis label
+
+                # Display the Plotly chart
+                st.plotly_chart(fig, use_container_width=True)
                 # for further handling we will use shorter variables
                 x = data["energy"].values
                 y = data["xas"].values
@@ -259,9 +283,10 @@ def plot_cum_sums(
         fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name='XAS'))
 
         # Add vertical lines
-        for n in np.array(whole_set)[:number_of_points, 6]:
-            n = int(n)
-            fig_xas.add_vline(x=x[len(z)-n], line=dict(color='gray', width=0.5))
+        n = int(last_number_xas_value)
+        fig_xas.add_vline(x=x[len(z)-n], line=dict(color='gray', width=1.), name='last number value', showlegend=True)
+        n = int(last_number_xas_range)
+        fig_xas.add_vline(x=x[len(z)-n], line=dict(color='gray', width=1.), name='last number range', showlegend=True)
 
         # Format XAS plot
         fig_xas.update_layout(
@@ -284,30 +309,50 @@ def plot_cum_sums(
         fig_xmcd.add_trace(go.Scatter(x=x, y=xmcd_cumulative, name='XMCD'))
 
         # Add scatter markers
-        for n in np.array(whole_set)[:number_of_points, 7]:
-            n = int(n)
-            fig_xmcd.add_trace(go.Scatter(
-                x=[x[len(z)-n]],
-                y=[xmcd_cumulative[-n]],
-                mode='markers',
-                marker=dict(symbol='x', color='red'),
-                showlegend=False
-            ))
+        n = last_number_xmcd_value
+        n = int(n)
+        fig_xmcd.add_trace(go.Scatter(
+            x=[x[len(z)-n]],
+            y=[xmcd_cumulative[-n]],
+            mode='markers',
+            marker=dict(symbol='x', color='red'),
+            showlegend=True,
+            name='last number'
+        ))
+        # Add scatter markers
+        n = int(last_number_xmcd_range)
+        fig_xmcd.add_trace(go.Scatter(
+            x=[x[len(z)-n]],
+            y=[xmcd_cumulative[-n]],
+            mode='markers',
+            marker=dict(symbol='x', color='red'),
+            showlegend=True,
+            name='last number range'
+        ))
 
-        for n in np.array(whole_set)[:number_of_points, 8]:
-            n = int(n)
-            idx = int(len(z)/2) + n
-            fig_xmcd.add_trace(go.Scatter(
-                x=[x[idx]],
-                y=[xmcd_cumulative[idx]],
-                mode='markers',
-                marker=dict(symbol='x', color='blue'),
-                showlegend=False
-            ))
+        n = int(edge_divider_value)
+        idx = int(len(z)/2) + n
+        fig_xmcd.add_trace(go.Scatter(
+            x=[x[idx]],
+            y=[xmcd_cumulative[idx]],
+            mode='markers',
+            marker=dict(symbol='x', color='blue'),
+            showlegend=True,
+            name='edge divider value'
+        ))
 
-        # Format XMCD plot
+        n = int(edge_divider_range)
+        idx = int(len(z)/2) + n
+        fig_xmcd.add_trace(go.Scatter(
+            x=[x[idx]],
+            y=[xmcd_cumulative[idx]],
+            mode='markers',
+            marker=dict(symbol='x', color='blue'),
+            showlegend=True,
+            name='edge divider range'
+        ))
         fig_xmcd.update_layout(
-            title='XMCD Cumulative Analysis',
+            title='XAS Cumulative Analysis',
             xaxis_title='Energy [eV]',
             yaxis_title='Cumulative Signal [arb. units]',
             showlegend=True,
@@ -345,13 +390,14 @@ def plot_parameter_distributions(monte_parameters):
     for param_name in monte_parameters:
         try:
             # Generate distribution data
-            dist_values = [define_dist(*monte_parameters[param_name]) for _ in range(500)]
+            dist_values = [define_dist(*monte_parameters[param_name]) for _ in range(len(whole_set))]
 
             # Calculate grid position
             row = (index % for_grid) + 1  # Plotly uses 1-based indexing
             col = (index // for_grid) + 1
 
             # Add histogram to subplot
+            # TODO use auto limits
             fig.add_trace(
                 go.Histogram(
                     x=dist_values,
@@ -368,7 +414,7 @@ def plot_parameter_distributions(monte_parameters):
                 yref=f"y{(row-1)*for_grid + col}",
                 text=param_name,
                 showarrow=False,
-                font=dict(size=10),
+                font=dict(size=30),
                 xanchor="center",
                 yanchor="bottom",
                 y=1.1  # Position above subplot
@@ -479,6 +525,63 @@ results_df = pd.DataFrame({
     "Units": ["µB", "µB", "µB", "%"]
 })
 
-# Display the results as a Streamlit table
-st.subheader("Monte Carlo Simulation Results")
-st.table(results_df)
+st.header("Monte Carlo Simulation Results")
+# Create two columns to display results
+col1, col2, col3 = st.columns(3)
+
+# Display the results in the first column
+with col1:
+
+    def color_row(row):
+        colors = ["background-color: blue", "background-color: green", "background-color: red", "background-color: purple"]
+        return [colors[row.name % len(colors)]] * len(row)
+
+    styled_results_df = results_df.style.apply(color_row, axis=1)
+    st.dataframe(styled_results_df)
+
+# Display histograms of the results in the second column
+with col2:
+    fig = make_subplots(rows=2, cols=2, subplot_titles=["Lz", "Sz", "µtot", "µratio (µl/µs)"])
+
+    # Add histograms for each parameter
+    fig.add_trace(go.Histogram(x=lz_list, name="Lz", marker_color="blue"), row=1, col=1)
+    fig.add_trace(go.Histogram(x=sz_list, name="Sz", marker_color="green"), row=1, col=2)
+    fig.add_trace(go.Histogram(x=mu_tot_list, name="µtot", marker_color="red"), row=2, col=1)
+    fig.add_trace(go.Histogram(x=mu_rat_list, name="µratio", marker_color="purple"), row=2, col=2)
+
+    # Update layout
+    fig.update_layout(
+        title="Monte Carlo Simulation Parameter Distributions",
+        showlegend=False,
+        height=600,
+        template="plotly_white"
+    )
+
+    # Display the plot
+    st.plotly_chart(fig, use_container_width=True)
+
+# Create a correlation matrix
+df = pd.DataFrame(whole_set, columns=['step1', 'step2', 'slope', 'br', 'nh', 'tz', 'ln_xas', 'ln_xmcd', 'edge_divider'])
+df2 = pd.DataFrame({'lz': lz_list, 'sz': sz_list,
+                    'mu_tot': mu_tot_list, 'mu_rat': mu_rat_list})
+
+df3 = pd.concat([df2, df], axis=1)
+corr = df3.corr().round(2)
+corr = corr.dropna(axis=0, how='all')
+corr = corr.dropna(axis=1, how='all')
+
+
+with col3:
+    st.subheader("Correlation Matrix")
+    st.dataframe(corr.style.format("{:.2f}").background_gradient(cmap='coolwarm'), use_container_width=True)
+
+
+# Add a download button for the results
+st.subheader("Download Results")
+csv = results_df.to_csv(index=False)
+st.download_button(
+    label="Download Results as CSV",
+    data=csv,
+    file_name="monte_carlo_results.csv",
+    mime="text/csv"
+)
