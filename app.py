@@ -2,13 +2,14 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-# from xaspy.xas.polarized import Lz, Sz
+from xaspy.xas.polarized import Lz, Sz
 from xaspy.xas.backgrounds import step
-import time
+
 
 st.set_page_config(page_title="XASpy", page_icon=":sparkles:", layout="wide")
-st.title("XASpy:Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy")
+st.title("XASpy: Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy Sum Rule Analysis")
 
 # read and display the input data
 st.subheader("Input Data")
@@ -55,17 +56,21 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Error reading CSV file: {str(e)}")
 
+if uploaded_file is None:
+    st.warning("Please upload a data file to proceed.")
+    st.stop()
+
 # read in all the input parameters in multiple columns
 st.subheader("Parameters for Background Subtraction")
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    initial_step1 = st.number_input("Initial Step 1", value=1085)
+    initial_step1 = st.number_input("Initial Step 1", value=708.0, step=0.1)
 with col2:
-    initial_step2 = st.number_input("Initial Step 2", value=1110)
+    initial_step2 = st.number_input("Initial Step 2", value=721.0, step=0.1)
 with col3:
     initial_slope = st.number_input("Initial Slope", value=1.0)
 with col4:
-    initial_branching = st.number_input("Initial Branching", value=1.3/5)
+    initial_branching = st.number_input("Initial Branching", value=0.33)
 
 
 # define a two step function:
@@ -132,7 +137,7 @@ with col3:
     initial_slope_dist_function = st.selectbox("Initial Slope Distribution Function", ("normal", "uniform", "randint", None))
 with col4:
     initial_branching_dist = st.number_input("Initial Branching Distribution", value=1.0)
-    initial_branching_dist_function = st.selectbox("Initial Branching Distribution Function", ("normal", "uniform", "randint", None))
+    initial_branching_dist_function = st.selectbox("Initial Branching Distribution Function", ("normal", "uniform", "randint", None), index=3)
 
 monte_parameters = dict({
      'step1_dist': (initial_step1, initial_step1_dist, initial_step1_dist_function),
@@ -168,7 +173,7 @@ with col1:
     nh_dist_function = st.selectbox("Nh Dist Function", ("normal", "uniform", None))
 
 with col2:
-    tz_dist_value = st.number_input("Tz Dist Value", value=-0.4)
+    tz_dist_value = st.number_input("Tz Dist Value", value=0.0, step=0.1)
     tz_dist_function = st.selectbox("Tz Dist Function", ("normal", "uniform", None))
     tz_dist_variance = st.number_input("Tz Dist Variance", value=0.1)
 
@@ -192,41 +197,46 @@ monte_parameters['last_number_xmcd_dist'] = (last_number_xmcd_value, last_number
 monte_parameters['edge_divider_dist'] = (edge_divider_value, edge_divider_range, "randint")
 
 
-sampling_size = st.number_input("Sampling Size", min_value=1, value=10000, step=1000, format="%d")
-
-# run the simulation
-# TODO add a progress bar
-st.write("Setting up Monte Carlo Parameters...")
-# TODO add a button to stop the simulation
-whole_set = list()
-progress_bar = st.progress(0)
-status_text = st.empty()
-
-for i in range(sampling_size):
-    param_set = [
-        define_dist(*monte_parameters['step1_dist']),
-        define_dist(*monte_parameters['step2_dist']),
-        define_dist(*monte_parameters['slope_dist']),
-        define_dist(*monte_parameters['branching_dist']),
-        define_dist(*monte_parameters['nh_dist']),
-        define_dist(*monte_parameters['tz_dist']),
-        define_dist(*monte_parameters['last_number_xas_dist']),
-        define_dist(*monte_parameters['last_number_xmcd_dist']),
-        define_dist(*monte_parameters['edge_divider_dist']),
-    ]
-    whole_set.append(param_set)
-    # Update progress bar and status text
-    progress_bar.progress((i + 1) / sampling_size)
-    status_text.text(f"Processing sample {i + 1} of {sampling_size}")
-    time.sleep(0.001)  # Simulate processing time (optional)
-
-# Clear progress bar and status text after completion
-progress_bar.empty()
-
-status_text.text(f"Monte Carlo Simulation parameters setup complet with {len(whole_set)} samples.")
+sampling_size = st.number_input("Sampling Size", min_value=1, value=1000, step=1000, format="%d")
 
 
-# TODO continue here
+def setup_monte_carlo_parameters(monte_parameters, sampling_size):
+    """
+    Setup the parameters for the Monte Carlo Simulation.
+    """
+    # setup the oarameters
+    st.write("Setting up Monte Carlo Parameters...")
+    # TODO add a button to stop the simulation
+    whole_set = list()
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    for i in range(sampling_size):
+        param_set = [
+            define_dist(*monte_parameters['step1_dist']),
+            define_dist(*monte_parameters['step2_dist']),
+            define_dist(*monte_parameters['slope_dist']),
+            define_dist(*monte_parameters['branching_dist']),
+            define_dist(*monte_parameters['nh_dist']),
+            define_dist(*monte_parameters['tz_dist']),
+            define_dist(*monte_parameters['last_number_xas_dist']),
+            define_dist(*monte_parameters['last_number_xmcd_dist']),
+            define_dist(*monte_parameters['edge_divider_dist']),
+        ]
+        whole_set.append(param_set)
+        # Update progress bar and status text
+        progress_bar.progress((i + 1) / sampling_size)
+        status_text.text(f"Processing sample {i + 1} of {sampling_size}")
+
+    # Clear progress bar and status text after completion
+    progress_bar.empty()
+
+    status_text.text(f"Monte Carlo Simulation parameters setup complet with {len(whole_set)} samples.")
+
+    return whole_set
+
+
+whole_set = setup_monte_carlo_parameters(monte_parameters, sampling_size)
 
 
 def plot_cum_sums(
@@ -244,28 +254,9 @@ def plot_cum_sums(
 
         # Calculate cumulative sums
         initial_corrected_xas_cs = np.cumsum(_step(x, y, initial_step1, initial_step2, slope=initial_slope)[0])
-        cs1 = np.cumsum(
-            _step(
-                x, y,
-                monte_parameters['step1_dist'][0] - monte_parameters['step1_dist'][1],
-                monte_parameters['step2_dist'][0] - monte_parameters['step2_dist'][1],
-                slope=initial_slope, br=initial_branching
-            )[0]
-        )
-
-        cs2 = np.cumsum(
-            _step(
-                x, y,
-                monte_parameters['step1_dist'][0] + monte_parameters['step1_dist'][1],
-                monte_parameters['step2_dist'][0] + monte_parameters['step2_dist'][1],
-                slope=initial_slope, br=initial_branching
-            )[0]
-        )
 
         # Add traces
-        fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name='XAS Baseline'))
-        fig_xas.add_trace(go.Scatter(x=x, y=cs1, name='XAS Min Variant', line=dict(dash='dot')))
-        fig_xas.add_trace(go.Scatter(x=x, y=cs2, name='XAS Max Variant', line=dict(dash='dot')))
+        fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name='XAS'))
 
         # Add vertical lines
         for n in np.array(whole_set)[:number_of_points, 6]:
@@ -332,3 +323,162 @@ plot_cum_sums(
     initial_step1, initial_step2,
     initial_slope, initial_branching
 )
+
+
+def plot_parameter_distributions(monte_parameters):
+    # Calculate grid dimensions
+    n_params = len(monte_parameters)
+    for_grid = int(np.ceil(np.sqrt(n_params)))
+
+    # Create Plotly subplot grid
+    fig = make_subplots(
+        rows=for_grid,
+        cols=for_grid,
+        horizontal_spacing=0.1,
+        vertical_spacing=0.1
+    )
+
+    # Track valid parameters and their positions
+    valid_params = []
+    index = 0
+
+    for param_name in monte_parameters:
+        try:
+            # Generate distribution data
+            dist_values = [define_dist(*monte_parameters[param_name]) for _ in range(500)]
+
+            # Calculate grid position
+            row = (index % for_grid) + 1  # Plotly uses 1-based indexing
+            col = (index // for_grid) + 1
+
+            # Add histogram to subplot
+            fig.add_trace(
+                go.Histogram(
+                    x=dist_values,
+                    marker_color='slategrey',
+                    showlegend=False
+                ),
+                row=row,
+                col=col
+            )
+
+            # Add title annotation
+            fig.add_annotation(
+                xref=f"x{(row-1)*for_grid + col}",
+                yref=f"y{(row-1)*for_grid + col}",
+                text=param_name,
+                showarrow=False,
+                font=dict(size=10),
+                xanchor="center",
+                yanchor="bottom",
+                y=1.1  # Position above subplot
+            )
+
+            valid_params.append(param_name)
+            index += 1
+
+        except Exception as e:
+            st.error(f"Could not plot {param_name}: {str(e)}")
+            continue
+
+    # Hide empty subplot axes
+    total_plots = for_grid ** 2
+    for i in range(len(valid_params), total_plots):
+        row = (i % for_grid) + 1
+        col = (i // for_grid) + 1
+        fig.update_xaxes(showticklabels=False, showgrid=False, row=row, col=col)
+        fig.update_yaxes(showticklabels=False, showgrid=False, row=row, col=col)
+
+    # Set layout properties
+    fig.update_layout(
+        height=800,
+        title_text="Parameter Distributions",
+        title_x=0.5,
+        margin=dict(t=100),
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+st.subheader("Parameter Distributions going into the Monte Carlo Simulation")
+# Usage in your Streamlit app:
+plot_parameter_distributions(monte_parameters)
+
+st.write("The following parameters are used for the Monte Carlo Simulation. The values are used to generate a random distribution of the parameters.")
+# First row
+col1, col2 = st.columns(2)
+with col1:
+    # g-factor
+    g = st.number_input("g-factor", value=2, step=1)
+with col2:
+    # c-factor
+    c = st.number_input("c=1 for p -> d, c=2 for d -> f", value=1, step=1)
+
+l_value = c + 1
+
+
+###################
+lz_list = list()
+sz_list = list()
+mu_tot_list = list()
+# ratio of orbital to spin moment,
+# independent of XAS and nh if Tz = 0
+mu_rat_list = list()
+
+for n in whole_set:
+    try:
+        # calculate:
+        xas_corr = np.array(_step(
+            x, y, n[0], n[1],
+            slope=float(n[2]),
+            br=n[3]
+        )[0])
+        print(n)
+        lz = Lz(z, xas_corr,
+                c=c, l=l_value,
+                nh=n[4],
+                last_number_xas=n[6],
+                last_number_xmcd=n[7])
+
+        sz = Sz(z, xas_corr,
+                c=c, l=l_value,
+                nh=n[4], tz=n[5],
+                last_number_xas=n[6],
+                last_number_xmcd=n[7],
+                edge_div=n[8])
+
+        mu_tot = -(g * sz + lz)
+        mu_rat = lz / (g * sz)
+
+        # save in lists:
+        lz_list.append(lz)
+        sz_list.append(sz)
+        mu_tot_list.append(mu_tot)
+        mu_rat_list.append(mu_rat)
+
+    except Exception as e:
+        st.error(f"Error processing: {str(e)}")
+        continue
+
+# Create a DataFrame to display the results
+results_df = pd.DataFrame({
+    "Parameter": ["Lz", "Sz", "µtot", "µratio (µl/µs)"],
+    "Mean": [
+        np.around(np.nanmean(lz_list), 5),
+        np.around(np.nanmean(sz_list), 5),
+        np.around(np.nanmean(mu_tot_list), 5),
+        np.around(np.nanmean(mu_rat_list) * 100, 5)
+    ],
+    "Standard Deviation": [
+        np.around(np.nanstd(lz_list), 5),
+        np.around(np.nanstd(sz_list), 5),
+        np.around(np.nanstd(mu_tot_list), 5),
+        np.around(np.nanstd(mu_rat_list) * 100, 5)
+    ],
+    "Units": ["µB", "µB", "µB", "%"]
+})
+
+# Display the results as a Streamlit table
+st.subheader("Monte Carlo Simulation Results")
+st.table(results_df)
