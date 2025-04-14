@@ -3,12 +3,15 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from loguru import logger
 
 from xaspy.xas.polarized import Lz, Sz
 from xaspy.xas.backgrounds import step
 
 
-st.set_page_config(page_title="XASpy", page_icon=":sparkles:", layout="wide")
+st.set_page_config(
+    page_title="XASpy - Monte Carlo", page_icon=":sparkles:", layout="wide"
+)
 st.title(
     "XASpy: Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy Sum Rule Analysis"
 )
@@ -105,6 +108,9 @@ with col3:
     initial_slope = st.number_input("Initial Slope", value=1.0)
 with col4:
     initial_branching = st.number_input("Initial Branching", value=0.33)
+logger.info(
+    f"Initial Step 1: {initial_step1}, Initial Step 2: {initial_step2}, Initial Slope: {initial_slope}, Initial Branching: {initial_branching}"
+)
 
 
 # define a two step function:
@@ -115,6 +121,22 @@ def _step(x, xas, step1, step2, slope=None, br=2 / 3):
     )
     xas00 = xas - stepx
     return xas00, stepx
+
+
+# define different distributions:
+def define_dist(a, b, dist="normal"):
+    if b is None or dist is None:
+        return a
+    if dist == "normal":
+        return np.random.normal(a, b)
+    elif dist == "randint":
+        return np.random.randint(a, b)
+    elif dist == "uniform":
+        return np.random.uniform(a, b)
+    else:
+        raise SyntaxError(
+            "distribution not in list, choose normal, uniform or randint distribution"
+        )
 
 
 def create_plot(x, y, z):
@@ -172,6 +194,9 @@ try:
     st.plotly_chart(create_plot(x, y, z), use_container_width=True)
 except Exception:
     st.write("nothing to plot yet")
+    logger.warning(
+        "No data to plot. Please upload a data file and set the parameters."
+    )
 
 
 st.subheader("Parameters for step function and background subtraction")
@@ -218,22 +243,6 @@ monte_parameters = dict(
         ),
     }
 )
-
-
-# define different distributions:
-def define_dist(a, b, dist="normal"):
-    if b is None or dist is None:
-        return a
-    if dist == "normal":
-        return np.random.normal(a, b)
-    elif dist == "randint":
-        return np.random.randint(a, b)
-    elif dist == "uniform":
-        return np.random.uniform(a, b)
-    else:
-        raise SyntaxError(
-            "distribution not in list, choose normal, uniform or randint distribution"
-        )
 
 
 st.subheader("Parameters for Sum Rule Analysis")
@@ -284,6 +293,9 @@ monte_parameters["edge_divider_dist"] = (
     edge_divider_range,
     "randint",
 )
+logger.info("All parameters:")
+for key, value in monte_parameters.items():
+    logger.info(f"  {key}: {value}")
 
 
 sampling_size = st.number_input(
@@ -608,6 +620,7 @@ for n in whole_set:
 
     except Exception as e:
         st.error(f"Error processing: {str(e)}")
+        logger.error(f"Error processing: {str(e)}")
         continue
 
 # Create a DataFrame to display the results
