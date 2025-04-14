@@ -9,11 +9,15 @@ from xaspy.xas.backgrounds import step
 
 
 st.set_page_config(page_title="XASpy", page_icon=":sparkles:", layout="wide")
-st.title("XASpy: Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy Sum Rule Analysis")
+st.title(
+    "XASpy: Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy Sum Rule Analysis"
+)
 
 # read and display the input data
 st.subheader("Input Data")
-st.write("Upload your data file. The data should be formated the following: energy, xas, xmcd, without header.")
+st.write(
+    "Upload your data file. The data should be formated the following: energy, xas, xmcd, without header."
+)
 uploaded_file = st.file_uploader("Upload your data file")
 if uploaded_file is not None:
     try:
@@ -40,22 +44,26 @@ if uploaded_file is not None:
                 fig = go.Figure()
 
                 # Add XAS trace
-                fig.add_trace(go.Scatter(
-                    x=data["energy"],
-                    y=data["xas"],
-                    mode='lines',
-                    name='XAS',
-                    line=dict(color='blue', width=2)
-                ))
+                fig.add_trace(
+                    go.Scatter(
+                        x=data["energy"],
+                        y=data["xas"],
+                        mode="lines",
+                        name="XAS",
+                        line=dict(color="blue", width=2),
+                    )
+                )
 
                 # Add XMCD trace
-                fig.add_trace(go.Scatter(
-                    x=data["energy"],
-                    y=data["xmcd"],
-                    mode='lines',
-                    name='XMCD',
-                    line=dict(color='orange', width=2, dash='dash')
-                ))
+                fig.add_trace(
+                    go.Scatter(
+                        x=data["energy"],
+                        y=data["xmcd"],
+                        mode="lines",
+                        name="XMCD",
+                        line=dict(color="orange", width=2, dash="dash"),
+                    )
+                )
 
                 # Update layout
                 fig.update_layout(
@@ -64,7 +72,9 @@ if uploaded_file is not None:
                     yaxis_title="Intensity",
                     hovermode="x unified",
                     template="plotly_white",
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                    legend=dict(
+                        orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
+                    ),
                 )
 
                 # Display the Plotly chart
@@ -98,11 +108,11 @@ with col4:
 
 
 # define a two step function:
-def _step(x, xas, step1, step2, slope=None, br=2/3):
+def _step(x, xas, step1, step2, slope=None, br=2 / 3):
     final_step_hight = np.array(xas)[-1]
-    stepx = step(final_step_hight*br,
-                 step1, x, slope=slope) + step(final_step_hight*(1-br),
-                                               step2, x, slope=slope)
+    stepx = step(final_step_hight * br, step1, x, slope=slope) + step(
+        final_step_hight * (1 - br), step2, x, slope=slope
+    )
     xas00 = xas - stepx
     return xas00, stepx
 
@@ -111,82 +121,125 @@ def create_plot(x, y, z):
     fig = go.Figure()
 
     # Original XAS/XMCD
-    fig.add_trace(go.Scatter(x=x, y=y, name='XAS',
-                             line=dict(color='firebrick', width=2, dash='solid')))
-    fig.add_trace(go.Scatter(x=x, y=z, name='XMCD',
-                             line=dict(color='firebrick', width=2, dash='dash')))
+    fig.add_trace(
+        go.Scatter(
+            x=x, y=y, name="XAS", line=dict(color="firebrick", width=2, dash="solid")
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x, y=z, name="XMCD", line=dict(color="firebrick", width=2, dash="dash")
+        )
+    )
 
     # Calculate modified curves
-    corr_xas, step_func = _step(x, y, initial_step1, initial_step2,
-                                slope=initial_slope,
-                                br=initial_branching)
+    corr_xas, step_func = _step(
+        x, y, initial_step1, initial_step2, slope=initial_slope, br=initial_branching
+    )
 
-    fig.add_trace(go.Scatter(x=x, y=corr_xas, name='Corrected XAS', line=dict(color="slateblue", width=1, dash='dot')))
-    fig.add_trace(go.Scatter(x=x, y=step_func, name='Step Function', line=dict(color='slategrey', width=1, dash='dot')))
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=corr_xas,
+            name="Corrected XAS",
+            line=dict(color="slateblue", width=1, dash="dot"),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=step_func,
+            name="Step Function",
+            line=dict(color="slategrey", width=1, dash="dot"),
+        )
+    )
 
     # Formatting
     fig.update_layout(
-        title='XAS/XMCD Analysis',
-        xaxis_title='Energy',
-        yaxis_title='Intensity',
-        hovermode='x unified',
+        title="XAS/XMCD Analysis",
+        xaxis_title="Energy",
+        yaxis_title="Intensity",
+        hovermode="x unified",
         showlegend=True,
-        template='plotly_white',
-        legend=dict(orientation='h', yanchor='bottom', y=1.02)
+        template="plotly_white",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02),
     )
     return fig
 
 
 try:
     # Display in Streamlit
-    st.plotly_chart(create_plot(x, y, z),
-                    use_container_width=True)
+    st.plotly_chart(create_plot(x, y, z), use_container_width=True)
 except Exception:
     st.write("nothing to plot yet")
 
 
 st.subheader("Parameters for step function and background subtraction")
-st.write("The following parameters are used for the step function and background subtraction. The values are used to generate a random distribution of the parameters.")
+st.write(
+    "The following parameters are used for the step function and background subtraction. The values are used to generate a random distribution of the parameters."
+)
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     initial_step1_dist = st.number_input("Initial Step 1 Distribution", value=1.0)
-    initial_step1_dist_function = st.selectbox("Initial Step 1 Distribution Function", ("normal", "uniform", "randint", None))
+    initial_step1_dist_function = st.selectbox(
+        "Initial Step 1 Distribution Function", ("normal", "uniform", "randint", None)
+    )
 
 with col2:
     initial_step2_dist = st.number_input("Initial Step 2 Distribution", value=1.0)
-    initial_step2_dist_function = st.selectbox("Initial Step 2 Distribution Function", ("normal", "uniform", "randint", None))
+    initial_step2_dist_function = st.selectbox(
+        "Initial Step 2 Distribution Function", ("normal", "uniform", "randint", None)
+    )
 with col3:
     initial_slope_dist = st.number_input("Initial Slope Distribution", value=1.0)
-    initial_slope_dist_function = st.selectbox("Initial Slope Distribution Function", ("normal", "uniform", "randint", None))
+    initial_slope_dist_function = st.selectbox(
+        "Initial Slope Distribution Function", ("normal", "uniform", "randint", None)
+    )
 with col4:
-    initial_branching_dist = st.number_input("Initial Branching Distribution", value=1.0)
-    initial_branching_dist_function = st.selectbox("Initial Branching Distribution Function", ("normal", "uniform", "randint", None), index=3)
+    initial_branching_dist = st.number_input(
+        "Initial Branching Distribution", value=1.0
+    )
+    initial_branching_dist_function = st.selectbox(
+        "Initial Branching Distribution Function",
+        ("normal", "uniform", "randint", None),
+        index=3,
+    )
 
-monte_parameters = dict({
-     'step1_dist': (initial_step1, initial_step1_dist, initial_step1_dist_function),
-     'step2_dist': (initial_step2, initial_step2_dist, initial_step2_dist_function),
-     'slope_dist': (initial_slope, initial_slope_dist, initial_slope_dist_function),
-     'branching_dist': (initial_branching, initial_branching_dist, initial_branching_dist_function)
-                        })
+monte_parameters = dict(
+    {
+        "step1_dist": (initial_step1, initial_step1_dist, initial_step1_dist_function),
+        "step2_dist": (initial_step2, initial_step2_dist, initial_step2_dist_function),
+        "slope_dist": (initial_slope, initial_slope_dist, initial_slope_dist_function),
+        "branching_dist": (
+            initial_branching,
+            initial_branching_dist,
+            initial_branching_dist_function,
+        ),
+    }
+)
 
 
 # define different distributions:
-def define_dist(a, b, dist='normal'):
+def define_dist(a, b, dist="normal"):
     if b is None or dist is None:
         return a
-    if dist == 'normal':
+    if dist == "normal":
         return np.random.normal(a, b)
-    elif dist == 'randint':
+    elif dist == "randint":
         return np.random.randint(a, b)
-    elif dist == 'uniform':
+    elif dist == "uniform":
         return np.random.uniform(a, b)
     else:
-        raise SyntaxError('distribution not in list, choose normal, uniform or randint distribution')
+        raise SyntaxError(
+            "distribution not in list, choose normal, uniform or randint distribution"
+        )
 
 
 st.subheader("Parameters for Sum Rule Analysis")
-st.write("The following parameters are used for the sum rule analysis. The values are used to generate a random distribution of the parameters.")
+st.write(
+    "The following parameters are used for the sum rule analysis. The values are used to generate a random distribution of the parameters."
+)
 
 
 # Add further parameters for sum rule analysis as input fields:
@@ -214,14 +267,28 @@ with col5:
     edge_divider_range = st.number_input("Edge Divider Range", value=5)
 
 # Update monte_parameters dictionary with user inputs
-monte_parameters['nh_dist'] = (nh_dist_value, None, nh_dist_function)
-monte_parameters['tz_dist'] = (tz_dist_value, tz_dist_variance, tz_dist_function)
-monte_parameters['last_number_xas_dist'] = (last_number_xas_value, last_number_xas_range, "randint")
-monte_parameters['last_number_xmcd_dist'] = (last_number_xmcd_value, last_number_xmcd_range, "randint")
-monte_parameters['edge_divider_dist'] = (edge_divider_value, edge_divider_range, "randint")
+monte_parameters["nh_dist"] = (nh_dist_value, None, nh_dist_function)
+monte_parameters["tz_dist"] = (tz_dist_value, tz_dist_variance, tz_dist_function)
+monte_parameters["last_number_xas_dist"] = (
+    last_number_xas_value,
+    last_number_xas_range,
+    "randint",
+)
+monte_parameters["last_number_xmcd_dist"] = (
+    last_number_xmcd_value,
+    last_number_xmcd_range,
+    "randint",
+)
+monte_parameters["edge_divider_dist"] = (
+    edge_divider_value,
+    edge_divider_range,
+    "randint",
+)
 
 
-sampling_size = st.number_input("Sampling Size", min_value=1, value=1000, step=1000, format="%d")
+sampling_size = st.number_input(
+    "Sampling Size", min_value=1, value=1000, step=1000, format="%d"
+)
 
 
 def setup_monte_carlo_parameters(monte_parameters, sampling_size):
@@ -237,15 +304,15 @@ def setup_monte_carlo_parameters(monte_parameters, sampling_size):
 
     for i in range(sampling_size):
         param_set = [
-            define_dist(*monte_parameters['step1_dist']),
-            define_dist(*monte_parameters['step2_dist']),
-            define_dist(*monte_parameters['slope_dist']),
-            define_dist(*monte_parameters['branching_dist']),
-            define_dist(*monte_parameters['nh_dist']),
-            define_dist(*monte_parameters['tz_dist']),
-            define_dist(*monte_parameters['last_number_xas_dist']),
-            define_dist(*monte_parameters['last_number_xmcd_dist']),
-            define_dist(*monte_parameters['edge_divider_dist']),
+            define_dist(*monte_parameters["step1_dist"]),
+            define_dist(*monte_parameters["step2_dist"]),
+            define_dist(*monte_parameters["slope_dist"]),
+            define_dist(*monte_parameters["branching_dist"]),
+            define_dist(*monte_parameters["nh_dist"]),
+            define_dist(*monte_parameters["tz_dist"]),
+            define_dist(*monte_parameters["last_number_xas_dist"]),
+            define_dist(*monte_parameters["last_number_xmcd_dist"]),
+            define_dist(*monte_parameters["edge_divider_dist"]),
         ]
         whole_set.append(param_set)
         # Update progress bar and status text
@@ -255,7 +322,9 @@ def setup_monte_carlo_parameters(monte_parameters, sampling_size):
     # Clear progress bar and status text after completion
     progress_bar.empty()
 
-    status_text.text(f"Monte Carlo Simulation parameters setup complet with {len(whole_set)} samples.")
+    status_text.text(
+        f"Monte Carlo Simulation parameters setup complet with {len(whole_set)} samples."
+    )
 
     return whole_set
 
@@ -264,10 +333,16 @@ whole_set = setup_monte_carlo_parameters(monte_parameters, sampling_size)
 
 
 def plot_cum_sums(
-    x, y, z, whole_set, monte_parameters,
-    initial_step1, initial_step2,
-    initial_slope, initial_branching,
-    number_of_points=50
+    x,
+    y,
+    z,
+    whole_set,
+    monte_parameters,
+    initial_step1,
+    initial_step2,
+    initial_slope,
+    initial_branching,
+    number_of_points=50,
 ):
     # Create two columns
     col1, col2 = st.columns(2)
@@ -277,25 +352,37 @@ def plot_cum_sums(
         fig_xas = go.Figure()
 
         # Calculate cumulative sums
-        initial_corrected_xas_cs = np.cumsum(_step(x, y, initial_step1, initial_step2, slope=initial_slope)[0])
+        initial_corrected_xas_cs = np.cumsum(
+            _step(x, y, initial_step1, initial_step2, slope=initial_slope)[0]
+        )
 
         # Add traces
-        fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name='XAS'))
+        fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name="XAS"))
 
         # Add vertical lines
         n = int(last_number_xas_value)
-        fig_xas.add_vline(x=x[len(z)-n], line=dict(color='gray', width=1.), name='last number value', showlegend=True)
+        fig_xas.add_vline(
+            x=x[len(z) - n],
+            line=dict(color="gray", width=1.0),
+            name="last number value",
+            showlegend=True,
+        )
         n = int(last_number_xas_range)
-        fig_xas.add_vline(x=x[len(z)-n], line=dict(color='gray', width=1.), name='last number range', showlegend=True)
+        fig_xas.add_vline(
+            x=x[len(z) - n],
+            line=dict(color="gray", width=1.0),
+            name="last number range",
+            showlegend=True,
+        )
 
         # Format XAS plot
         fig_xas.update_layout(
-            title='XAS Cumulative Analysis',
-            xaxis_title='Energy [eV]',
-            yaxis_title='Cumulative Signal [arb. units]',
+            title="XAS Cumulative Analysis",
+            xaxis_title="Energy [eV]",
+            yaxis_title="Cumulative Signal [arb. units]",
             showlegend=True,
             height=500,
-            margin=dict(t=40, b=40)
+            margin=dict(t=40, b=40),
         )
 
         st.plotly_chart(fig_xas, use_container_width=True)
@@ -306,67 +393,81 @@ def plot_cum_sums(
         fig_xmcd = go.Figure()
 
         # Main XMCD trace
-        fig_xmcd.add_trace(go.Scatter(x=x, y=xmcd_cumulative, name='XMCD'))
+        fig_xmcd.add_trace(go.Scatter(x=x, y=xmcd_cumulative, name="XMCD"))
 
         # Add scatter markers
         n = last_number_xmcd_value
         n = int(n)
-        fig_xmcd.add_trace(go.Scatter(
-            x=[x[len(z)-n]],
-            y=[xmcd_cumulative[-n]],
-            mode='markers',
-            marker=dict(symbol='x', color='red'),
-            showlegend=True,
-            name='last number'
-        ))
+        fig_xmcd.add_trace(
+            go.Scatter(
+                x=[x[len(z) - n]],
+                y=[xmcd_cumulative[-n]],
+                mode="markers",
+                marker=dict(symbol="x", color="red"),
+                showlegend=True,
+                name="last number",
+            )
+        )
         # Add scatter markers
         n = int(last_number_xmcd_range)
-        fig_xmcd.add_trace(go.Scatter(
-            x=[x[len(z)-n]],
-            y=[xmcd_cumulative[-n]],
-            mode='markers',
-            marker=dict(symbol='x', color='red'),
-            showlegend=True,
-            name='last number range'
-        ))
+        fig_xmcd.add_trace(
+            go.Scatter(
+                x=[x[len(z) - n]],
+                y=[xmcd_cumulative[-n]],
+                mode="markers",
+                marker=dict(symbol="x", color="red"),
+                showlegend=True,
+                name="last number range",
+            )
+        )
 
         n = int(edge_divider_value)
-        idx = int(len(z)/2) + n
-        fig_xmcd.add_trace(go.Scatter(
-            x=[x[idx]],
-            y=[xmcd_cumulative[idx]],
-            mode='markers',
-            marker=dict(symbol='x', color='blue'),
-            showlegend=True,
-            name='edge divider value'
-        ))
+        idx = int(len(z) / 2) + n
+        fig_xmcd.add_trace(
+            go.Scatter(
+                x=[x[idx]],
+                y=[xmcd_cumulative[idx]],
+                mode="markers",
+                marker=dict(symbol="x", color="blue"),
+                showlegend=True,
+                name="edge divider value",
+            )
+        )
 
         n = int(edge_divider_range)
-        idx = int(len(z)/2) + n
-        fig_xmcd.add_trace(go.Scatter(
-            x=[x[idx]],
-            y=[xmcd_cumulative[idx]],
-            mode='markers',
-            marker=dict(symbol='x', color='blue'),
-            showlegend=True,
-            name='edge divider range'
-        ))
+        idx = int(len(z) / 2) + n
+        fig_xmcd.add_trace(
+            go.Scatter(
+                x=[x[idx]],
+                y=[xmcd_cumulative[idx]],
+                mode="markers",
+                marker=dict(symbol="x", color="blue"),
+                showlegend=True,
+                name="edge divider range",
+            )
+        )
         fig_xmcd.update_layout(
-            title='XAS Cumulative Analysis',
-            xaxis_title='Energy [eV]',
-            yaxis_title='Cumulative Signal [arb. units]',
+            title="XMCD Cumulative Analysis",
+            xaxis_title="Energy [eV]",
+            yaxis_title="Cumulative Signal [arb. units]",
             showlegend=True,
             height=500,
-            margin=dict(t=40, b=40)
+            margin=dict(t=40, b=40),
         )
 
         st.plotly_chart(fig_xmcd, use_container_width=True)
 
 
 plot_cum_sums(
-    x, y, z, whole_set, monte_parameters,
-    initial_step1, initial_step2,
-    initial_slope, initial_branching
+    x,
+    y,
+    z,
+    whole_set,
+    monte_parameters,
+    initial_step1,
+    initial_step2,
+    initial_slope,
+    initial_branching,
 )
 
 
@@ -377,10 +478,7 @@ def plot_parameter_distributions(monte_parameters):
 
     # Create Plotly subplot grid
     fig = make_subplots(
-        rows=for_grid,
-        cols=for_grid,
-        horizontal_spacing=0.1,
-        vertical_spacing=0.1
+        rows=for_grid, cols=for_grid, horizontal_spacing=0.1, vertical_spacing=0.1
     )
 
     # Track valid parameters and their positions
@@ -390,7 +488,10 @@ def plot_parameter_distributions(monte_parameters):
     for param_name in monte_parameters:
         try:
             # Generate distribution data
-            dist_values = [define_dist(*monte_parameters[param_name]) for _ in range(len(whole_set))]
+            dist_values = [
+                define_dist(*monte_parameters[param_name])
+                for _ in range(len(whole_set))
+            ]
 
             # Calculate grid position
             row = (index % for_grid) + 1  # Plotly uses 1-based indexing
@@ -399,13 +500,9 @@ def plot_parameter_distributions(monte_parameters):
             # Add histogram to subplot
             # TODO use auto limits
             fig.add_trace(
-                go.Histogram(
-                    x=dist_values,
-                    marker_color='slategrey',
-                    showlegend=False
-                ),
+                go.Histogram(x=dist_values, marker_color="slategrey", showlegend=False),
                 row=row,
-                col=col
+                col=col,
             )
 
             # Add title annotation
@@ -417,7 +514,7 @@ def plot_parameter_distributions(monte_parameters):
                 font=dict(size=30),
                 xanchor="center",
                 yanchor="bottom",
-                y=1.1  # Position above subplot
+                y=1.1,  # Position above subplot
             )
 
             valid_params.append(param_name)
@@ -428,7 +525,7 @@ def plot_parameter_distributions(monte_parameters):
             continue
 
     # Hide empty subplot axes
-    total_plots = for_grid ** 2
+    total_plots = for_grid**2
     for i in range(len(valid_params), total_plots):
         row = (i % for_grid) + 1
         col = (i // for_grid) + 1
@@ -441,7 +538,7 @@ def plot_parameter_distributions(monte_parameters):
         title_text="Parameter Distributions",
         title_x=0.5,
         margin=dict(t=100),
-        template="plotly_white"
+        template="plotly_white",
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -451,7 +548,9 @@ st.subheader("Parameter Distributions going into the Monte Carlo Simulation")
 # Usage in your Streamlit app:
 plot_parameter_distributions(monte_parameters)
 
-st.write("The following parameters are used for the Monte Carlo Simulation. The values are used to generate a random distribution of the parameters.")
+st.write(
+    "The following parameters are used for the Monte Carlo Simulation. The values are used to generate a random distribution of the parameters."
+)
 # First row
 col1, col2 = st.columns(2)
 with col1:
@@ -475,24 +574,28 @@ mu_rat_list = list()
 for n in whole_set:
     try:
         # calculate:
-        xas_corr = np.array(_step(
-            x, y, n[0], n[1],
-            slope=float(n[2]),
-            br=n[3]
-        )[0])
-        print(n)
-        lz = Lz(z, xas_corr,
-                c=c, l=l_value,
-                nh=n[4],
-                last_number_xas=n[6],
-                last_number_xmcd=n[7])
+        xas_corr = np.array(_step(x, y, n[0], n[1], slope=float(n[2]), br=n[3])[0])
+        lz = Lz(
+            z,
+            xas_corr,
+            c=c,
+            l=l_value,
+            nh=n[4],
+            last_number_xas=n[6],
+            last_number_xmcd=n[7],
+        )
 
-        sz = Sz(z, xas_corr,
-                c=c, l=l_value,
-                nh=n[4], tz=n[5],
-                last_number_xas=n[6],
-                last_number_xmcd=n[7],
-                edge_div=n[8])
+        sz = Sz(
+            z,
+            xas_corr,
+            c=c,
+            l=l_value,
+            nh=n[4],
+            tz=n[5],
+            last_number_xas=n[6],
+            last_number_xmcd=n[7],
+            edge_div=n[8],
+        )
 
         mu_tot = -(g * sz + lz)
         mu_rat = lz / (g * sz)
@@ -508,22 +611,24 @@ for n in whole_set:
         continue
 
 # Create a DataFrame to display the results
-results_df = pd.DataFrame({
-    "Parameter": ["Lz", "Sz", "µtot", "µratio (µl/µs)"],
-    "Mean": [
-        np.around(np.nanmean(lz_list), 5),
-        np.around(np.nanmean(sz_list), 5),
-        np.around(np.nanmean(mu_tot_list), 5),
-        np.around(np.nanmean(mu_rat_list) * 100, 5)
-    ],
-    "Standard Deviation": [
-        np.around(np.nanstd(lz_list), 5),
-        np.around(np.nanstd(sz_list), 5),
-        np.around(np.nanstd(mu_tot_list), 5),
-        np.around(np.nanstd(mu_rat_list) * 100, 5)
-    ],
-    "Units": ["µB", "µB", "µB", "%"]
-})
+results_df = pd.DataFrame(
+    {
+        "Parameter": ["Lz", "Sz", "µtot", "µratio (µl/µs)"],
+        "Mean": [
+            np.around(np.nanmean(lz_list), 5),
+            np.around(np.nanmean(sz_list), 5),
+            np.around(np.nanmean(mu_tot_list), 5),
+            np.around(np.nanmean(mu_rat_list) * 100, 5),
+        ],
+        "Standard Deviation": [
+            np.around(np.nanstd(lz_list), 5),
+            np.around(np.nanstd(sz_list), 5),
+            np.around(np.nanstd(mu_tot_list), 5),
+            np.around(np.nanstd(mu_rat_list) * 100, 5),
+        ],
+        "Units": ["µB", "µB", "µB", "%"],
+    }
+)
 
 st.header("Monte Carlo Simulation Results")
 # Create two columns to display results
@@ -533,7 +638,12 @@ col1, col2, col3 = st.columns(3)
 with col1:
 
     def color_row(row):
-        colors = ["background-color: blue", "background-color: green", "background-color: red", "background-color: purple"]
+        colors = [
+            "background-color: blue",
+            "background-color: green",
+            "background-color: red",
+            "background-color: purple",
+        ]
         return [colors[row.name % len(colors)]] * len(row)
 
     styled_results_df = results_df.style.apply(color_row, axis=1)
@@ -541,39 +651,64 @@ with col1:
 
 # Display histograms of the results in the second column
 with col2:
-    fig = make_subplots(rows=2, cols=2, subplot_titles=["Lz", "Sz", "µtot", "µratio (µl/µs)"])
+    fig = make_subplots(
+        rows=2, cols=2, subplot_titles=["Lz", "Sz", "µtot", "µratio (µl/µs)"]
+    )
 
     # Add histograms for each parameter
     fig.add_trace(go.Histogram(x=lz_list, name="Lz", marker_color="blue"), row=1, col=1)
-    fig.add_trace(go.Histogram(x=sz_list, name="Sz", marker_color="green"), row=1, col=2)
-    fig.add_trace(go.Histogram(x=mu_tot_list, name="µtot", marker_color="red"), row=2, col=1)
-    fig.add_trace(go.Histogram(x=mu_rat_list, name="µratio", marker_color="purple"), row=2, col=2)
+    fig.add_trace(
+        go.Histogram(x=sz_list, name="Sz", marker_color="green"), row=1, col=2
+    )
+    fig.add_trace(
+        go.Histogram(x=mu_tot_list, name="µtot", marker_color="red"), row=2, col=1
+    )
+    fig.add_trace(
+        go.Histogram(x=mu_rat_list, name="µratio", marker_color="purple"), row=2, col=2
+    )
 
     # Update layout
     fig.update_layout(
         title="Monte Carlo Simulation Parameter Distributions",
         showlegend=False,
         height=600,
-        template="plotly_white"
+        template="plotly_white",
     )
 
     # Display the plot
     st.plotly_chart(fig, use_container_width=True)
 
 # Create a correlation matrix
-df = pd.DataFrame(whole_set, columns=['step1', 'step2', 'slope', 'br', 'nh', 'tz', 'ln_xas', 'ln_xmcd', 'edge_divider'])
-df2 = pd.DataFrame({'lz': lz_list, 'sz': sz_list,
-                    'mu_tot': mu_tot_list, 'mu_rat': mu_rat_list})
+df = pd.DataFrame(
+    whole_set,
+    columns=[
+        "step1",
+        "step2",
+        "slope",
+        "br",
+        "nh",
+        "tz",
+        "ln_xas",
+        "ln_xmcd",
+        "edge_divider",
+    ],
+)
+df2 = pd.DataFrame(
+    {"lz": lz_list, "sz": sz_list, "mu_tot": mu_tot_list, "mu_rat": mu_rat_list}
+)
 
 df3 = pd.concat([df2, df], axis=1)
 corr = df3.corr().round(2)
-corr = corr.dropna(axis=0, how='all')
-corr = corr.dropna(axis=1, how='all')
+corr = corr.dropna(axis=0, how="all")
+corr = corr.dropna(axis=1, how="all")
 
 
 with col3:
     st.subheader("Correlation Matrix")
-    st.dataframe(corr.style.format("{:.2f}").background_gradient(cmap='coolwarm'), use_container_width=True)
+    st.dataframe(
+        corr.style.format("{:.2f}").background_gradient(cmap="coolwarm"),
+        use_container_width=True,
+    )
 
 
 # Add a download button for the results
@@ -583,5 +718,5 @@ st.download_button(
     label="Download Results as CSV",
     data=csv,
     file_name="monte_carlo_results.csv",
-    mime="text/csv"
+    mime="text/csv",
 )
