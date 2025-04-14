@@ -21,6 +21,7 @@ st.subheader("Input Data")
 st.write(
     "Upload your data file. The data should be formated the following: energy, xas, xmcd, without header."
 )
+
 uploaded_file = st.file_uploader("Upload your data file")
 if uploaded_file is not None:
     try:
@@ -194,9 +195,7 @@ try:
     st.plotly_chart(create_plot(x, y, z), use_container_width=True)
 except Exception:
     st.write("nothing to plot yet")
-    logger.warning(
-        "No data to plot. Please upload a data file and set the parameters."
-    )
+    logger.warning("No data to plot. Please upload a data file and set the parameters.")
 
 
 st.subheader("Parameters for step function and background subtraction")
@@ -309,7 +308,6 @@ def setup_monte_carlo_parameters(monte_parameters, sampling_size):
     """
     # setup the oarameters
     st.write("Setting up Monte Carlo Parameters...")
-    # TODO add a button to stop the simulation
     whole_set = list()
     progress_bar = st.progress(0)
     status_text = st.empty()
