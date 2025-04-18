@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from loguru import logger
 
-from xaspy.xas.polarized import Lz, Sz
+from xaspy.xas.polarized import Lz_cumsum, Sz_cumsum
 from xaspy.xas.backgrounds import step
 
 
@@ -92,7 +92,8 @@ if uploaded_file is not None:
             st.error("CSV missing required columns. Needs: 'energy', 'xas', 'xmcd'")
 
     except Exception as e:
-        st.error(f"Error reading CSV file: {str(e)}")
+        st.error(f"Error reading text file: {str(e)}")
+        st.stop()
 
 if uploaded_file is None:
     st.warning("Please upload a data file to proceed.")
@@ -585,7 +586,7 @@ for n in whole_set:
     try:
         # calculate:
         xas_corr = np.array(_step(x, y, n[0], n[1], slope=float(n[2]), br=n[3])[0])
-        lz = Lz(
+        lz = Lz_cumsum(
             z,
             xas_corr,
             c=c,
