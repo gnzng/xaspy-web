@@ -51,6 +51,18 @@ if uploaded_file is not None:
                 st.write(data.head())
                 st.write("data points:")
                 st.write(len(data), "rows")
+                # for further handling we will use shorter variables
+                x = data["energy"].values
+                y = data["xas"].values
+                z = data["xmcd"].values
+                # Add a toggle switch to flip XMCD
+                flip_xmcd = st.checkbox("Flip XMCD (Multiply by -1)", value=False)
+                if flip_xmcd:
+                    z = -1 * z
+                show_energy_trace = st.checkbox(
+                    "Show Energy Trace (good for checking steps in energy)",
+                    value=False,
+                )
 
             with col2:
                 st.write("Plot:")
@@ -60,8 +72,8 @@ if uploaded_file is not None:
                 # Add XAS trace
                 fig.add_trace(
                     go.Scatter(
-                        x=data["energy"],
-                        y=data["xas"],
+                        x=x,
+                        y=y,
                         mode="lines",
                         name="XAS",
                         line=dict(color=grey, width=2),
@@ -71,13 +83,25 @@ if uploaded_file is not None:
                 # Add XMCD trace
                 fig.add_trace(
                     go.Scatter(
-                        x=data["energy"],
-                        y=data["xmcd"],
+                        x=x,
+                        y=z,
                         mode="lines",
                         name="XMCD",
                         line=dict(color=cyan, width=2),
                     )
                 )
+
+                # Add Energy trace (deactivated by default)
+                if show_energy_trace:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=x,
+                            y=np.arange(len(x)) / len(x),
+                            mode="markers",
+                            name="energy",
+                            marker=dict(symbol="x", color=purple, size=8),
+                        )
+                    )
 
                 # Update layout
                 fig.update_layout(
@@ -93,10 +117,6 @@ if uploaded_file is not None:
 
                 # Display the Plotly chart
                 st.plotly_chart(fig, use_container_width=True)
-                # for further handling we will use shorter variables
-                x = data["energy"].values
-                y = data["xas"].values
-                z = data["xmcd"].values
 
         else:
             st.error("CSV missing required columns. Needs: 'energy', 'xas', 'xmcd'")
