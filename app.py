@@ -7,6 +7,7 @@ from loguru import logger
 
 from xaspy.xas.polarized import Lz_cumsum, Sz_cumsum
 from xaspy.xas.backgrounds import step
+from xaspy.utils.utils import cumtrapz
 
 
 st.set_page_config(
@@ -363,8 +364,8 @@ def plot_cum_sums(
         fig_xas = go.Figure()
 
         # Calculate cumulative sums
-        initial_corrected_xas_cs = np.cumsum(
-            _step(x, y, initial_step1, initial_step2, slope=initial_slope)[0]
+        initial_corrected_xas_cs = cumtrapz(
+            _step(x, y, initial_step1, initial_step2, slope=initial_slope)[0], x
         )
 
         # Add traces
@@ -400,7 +401,7 @@ def plot_cum_sums(
 
     # --- Right Column (XMCD) ---
     with col2:
-        xmcd_cumulative = np.cumsum(z)
+        xmcd_cumulative = cumtrapz(z, x)
         fig_xmcd = go.Figure()
 
         # Main XMCD trace
@@ -585,10 +586,12 @@ mu_rat_list = list()
 for n in whole_set:
     try:
         # calculate:
-        xas_corr = np.array(_step(x, y, n[0], n[1], slope=float(n[2]), br=n[3])[0])
+        xas_corr_cs = cumtrapz(
+            _step(x, y, n[0], n[1], slope=float(n[2]), br=n[3])[0], x
+        )
         lz = Lz_cumsum(
             z,
-            xas_corr,
+            xas_corr_cs,
             c=c,
             l=l_value,
             nh=n[4],
@@ -596,9 +599,9 @@ for n in whole_set:
             last_number_xmcd=n[7],
         )
 
-        sz = Sz(
+        sz = Sz_cumsum(
             z,
-            xas_corr,
+            xas_corr_cs,
             c=c,
             l=l_value,
             nh=n[4],
