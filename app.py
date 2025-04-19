@@ -528,16 +528,77 @@ def plot_parameter_distributions(monte_parameters):
             ]
 
             # Calculate grid position
-            row = (index % for_grid) + 1  # Plotly uses 1-based indexing
+            row = (index % for_grid) + 1
             col = (index // for_grid) + 1
 
-            # Add histogram to subplot
-            # TODO use auto limits
-            fig.add_trace(
-                go.Histogram(x=dist_values, marker_color=grey, showlegend=False),
-                row=row,
-                col=col,
-            )
+            # Check if this is a single value parameter
+            is_single_value = len(set(dist_values)) == 1
+
+            if is_single_value:
+                # For single value, create a more visible representation
+                single_value = dist_values[0]
+
+                # Use a bar chart instead of histogram for single values
+                fig.add_trace(
+                    go.Bar(
+                        x=[single_value],
+                        y=[len(dist_values)],  # Count all occurrences
+                        marker_color="rgba(255, 165, 0, 0.7)",  # Orange with transparency
+                        width=0.1,  # Narrow bar
+                        showlegend=False,
+                    ),
+                    row=row,
+                    col=col,
+                )
+
+                # Set appropriate axis range for single value
+                margin = abs(single_value) * 0.1 if single_value != 0 else 0.5
+                fig.update_xaxes(
+                    range=[single_value - margin, single_value + margin],
+                    row=row,
+                    col=col,
+                )
+
+                # Add a marker to indicate this is a fixed value
+                fig.add_annotation(
+                    x=single_value,
+                    y=len(dist_values) / 2,
+                    text="Fixed Value",
+                    showarrow=False,
+                    font=dict(size=12),
+                    xref=f"x{(row-1)*for_grid + col}",
+                    yref=f"y{(row-1)*for_grid + col}",
+                )
+
+            else:
+                # Regular histogram for distributions
+                min_val = min(dist_values)
+                max_val = max(dist_values)
+                data_range = max_val - min_val
+
+                # If the data spans small values, ensure we have at least 10 bins
+                bin_size = max(data_range / 20, data_range * 0.01)
+
+                fig.add_trace(
+                    go.Histogram(
+                        x=dist_values,
+                        marker_color=grey,
+                        showlegend=False,
+                        xbins=dict(
+                            start=min_val - bin_size,
+                            end=max_val + bin_size,
+                            size=bin_size,
+                        ),
+                    ),
+                    row=row,
+                    col=col,
+                )
+
+                # Set x-axis range with small margin
+                margin = data_range * 0.05
+                fig.update_xaxes(
+                    range=[min_val - margin, max_val + margin], row=row, col=col
+                )
 
             # Add title annotation
             fig.add_annotation(
@@ -548,7 +609,7 @@ def plot_parameter_distributions(monte_parameters):
                 font=dict(size=30, color="orange"),
                 xanchor="center",
                 yanchor="bottom",
-                y=1.1,  # Position above subplot
+                y=1.1,
             )
 
             valid_params.append(param_name)
