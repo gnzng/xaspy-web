@@ -1381,6 +1381,8 @@ def main():
 
     if uploaded_file is None:
         st.warning("Please upload a data file to proceed.")
+        logger.warning("No data file uploaded.")
+        footer()
         st.stop()
 
     # Load and process data
@@ -1511,5 +1513,15 @@ def main():
     )
 
 
+def footer():
+    """Display footer information."""
+    st.markdown("---")
+    st.write(
+        "XASpy is a tool for analyzing X-ray absorption spectroscopy data. "
+        "For more information, visit the [GitHub repository](https://github.com/gnzng/xaspy-web). This application is powered by [Streamlit](https://streamlit.io/) and [Plotly](https://plotly.com/)."
+    )
+
+
 if __name__ == "__main__":
     main()
+    footer()
