@@ -912,9 +912,8 @@ def plot_cum_sums(
 
 def plot_parameter_distributions(monte_parameters, whole_set):
     """Plot distributions of Monte Carlo parameters."""
-    # Calculate grid dimensions
-    n_params = len(monte_parameters)
-    for_grid = int(np.ceil(np.sqrt(n_params)))
+    # Force a 3x3 grid
+    for_grid = 3
 
     # Create Plotly subplot grid
     fig = make_subplots(
@@ -940,8 +939,15 @@ def plot_parameter_distributions(monte_parameters, whole_set):
             ]
 
             # Calculate grid position
-            row = (index % for_grid) + 1
-            col = (index // for_grid) + 1
+            row = (index // for_grid) + 1
+            col = (index % for_grid) + 1
+
+            # Stop if we've filled the 3x3 grid
+            if index >= for_grid * for_grid:
+                st.warning(
+                    f"More than {for_grid*for_grid} parameters, only showing first {for_grid*for_grid}"
+                )
+                break
 
             # Check if this is a single value parameter
             is_single_value = len(set(dist_values)) == 1
@@ -978,8 +984,8 @@ def plot_parameter_distributions(monte_parameters, whole_set):
                     text="Fixed Value",
                     showarrow=False,
                     font=dict(size=12),
-                    xref=f"x{index+1}",
-                    yref=f"y{index+1}",
+                    xref=f"x{(row-1)*for_grid + col}",
+                    yref=f"y{(row-1)*for_grid + col}",
                 )
 
             else:
@@ -1014,11 +1020,11 @@ def plot_parameter_distributions(monte_parameters, whole_set):
 
             # Add title annotation
             fig.add_annotation(
-                xref=f"x{index+1}",
-                yref=f"y{index+1}",
+                xref=f"x{(row-1)*for_grid + col}",
+                yref=f"y{(row-1)*for_grid + col}",
                 text=param_name,
                 showarrow=False,
-                font=dict(size=20, color="orange"),
+                font=dict(size=30, color="orange"),
                 xanchor="center",
                 yanchor="bottom",
                 y=1.1,
@@ -1034,8 +1040,8 @@ def plot_parameter_distributions(monte_parameters, whole_set):
     # Hide empty subplot axes
     total_plots = for_grid**2
     for i in range(len(valid_params), total_plots):
-        row = (i % for_grid) + 1
-        col = (i // for_grid) + 1
+        row = (i // for_grid) + 1
+        col = (i % for_grid) + 1
         fig.update_xaxes(showticklabels=False, showgrid=False, row=row, col=col)
         fig.update_yaxes(showticklabels=False, showgrid=False, row=row, col=col)
 
