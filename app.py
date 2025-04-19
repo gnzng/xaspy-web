@@ -10,6 +10,15 @@ from xaspy.xas.backgrounds import step
 from xaspy.utils.utils import cumtrapz
 
 
+# colors:
+blue = "#0074D9"
+orange = "#FF851B"
+grey = "#6D6D6D"
+purple = "#B10DC9"
+cyan = "#01FF70"
+red = "#FF4136"
+
+
 st.set_page_config(
     page_title="XASpy - Monte Carlo", page_icon=":sparkles:", layout="wide"
 )
@@ -55,7 +64,7 @@ if uploaded_file is not None:
                         y=data["xas"],
                         mode="lines",
                         name="XAS",
-                        line=dict(color="blue", width=2),
+                        line=dict(color=grey, width=2),
                     )
                 )
 
@@ -66,7 +75,7 @@ if uploaded_file is not None:
                         y=data["xmcd"],
                         mode="lines",
                         name="XMCD",
-                        line=dict(color="orange", width=2, dash="dash"),
+                        line=dict(color=cyan, width=2),
                     )
                 )
 
@@ -101,7 +110,7 @@ if uploaded_file is None:
     st.stop()
 
 # read in all the input parameters in multiple columns
-st.subheader("Parameters for Background Subtraction")
+st.subheader("Parameters for Step Function as Background Subtraction")
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     initial_step1 = st.number_input("Initial Step 1", value=708.0, step=0.1)
@@ -147,14 +156,10 @@ def create_plot(x, y, z):
 
     # Original XAS/XMCD
     fig.add_trace(
-        go.Scatter(
-            x=x, y=y, name="XAS", line=dict(color="firebrick", width=2, dash="solid")
-        )
+        go.Scatter(x=x, y=y, name="XAS", line=dict(color=grey, width=2, dash="solid"))
     )
     fig.add_trace(
-        go.Scatter(
-            x=x, y=z, name="XMCD", line=dict(color="firebrick", width=2, dash="dash")
-        )
+        go.Scatter(x=x, y=z, name="XMCD", line=dict(color=cyan, width=2, dash="solid"))
     )
 
     # Calculate modified curves
@@ -167,7 +172,7 @@ def create_plot(x, y, z):
             x=x,
             y=corr_xas,
             name="Corrected XAS",
-            line=dict(color="slateblue", width=1, dash="dot"),
+            line=dict(color=grey, width=1, dash="dot"),
         )
     )
     fig.add_trace(
@@ -175,7 +180,7 @@ def create_plot(x, y, z):
             x=x,
             y=step_func,
             name="Step Function",
-            line=dict(color="slategrey", width=1, dash="dot"),
+            line=dict(color=red, width=1, dash="dot"),
         )
     )
 
@@ -369,22 +374,33 @@ def plot_cum_sums(
         )
 
         # Add traces
-        fig_xas.add_trace(go.Scatter(x=x, y=initial_corrected_xas_cs, name="XAS"))
+        fig_xas.add_trace(
+            go.Scatter(
+                x=x, y=initial_corrected_xas_cs, name="XAS", line=dict(color="grey")
+            )
+        )
 
-        # Add vertical lines
         n = int(last_number_xas_value)
-        fig_xas.add_vline(
-            x=x[len(z) - n],
-            line=dict(color="gray", width=1.0),
-            name="last number value",
-            showlegend=True,
+        fig_xas.add_trace(
+            go.Scatter(
+                x=[x[len(z) - n]],
+                y=[initial_corrected_xas_cs[-n]],
+                mode="markers",
+                marker=dict(symbol="triangle-left", color=purple),
+                showlegend=True,
+                name="last number value",
+            )
         )
         n = int(last_number_xas_range)
-        fig_xas.add_vline(
-            x=x[len(z) - n],
-            line=dict(color="gray", width=1.0),
-            name="last number range",
-            showlegend=True,
+        fig_xas.add_trace(
+            go.Scatter(
+                x=[x[len(z) - n]],
+                y=[initial_corrected_xas_cs[-n]],
+                mode="markers",
+                marker=dict(symbol="triangle-right", color=purple),
+                showlegend=True,
+                name="last number range",
+            )
         )
 
         # Format XAS plot
@@ -405,9 +421,16 @@ def plot_cum_sums(
         fig_xmcd = go.Figure()
 
         # Main XMCD trace
-        fig_xmcd.add_trace(go.Scatter(x=x, y=xmcd_cumulative, name="XMCD"))
+        fig_xmcd.add_trace(
+            go.Scatter(
+                x=x,
+                y=xmcd_cumulative,
+                name="XMCD",
+                line=dict(color=grey, width=2, dash="solid"),
+            )
+        )
 
-        # Add scatter markers
+        xmcd_cum_marker_color_ln = orange
         n = last_number_xmcd_value
         n = int(n)
         fig_xmcd.add_trace(
@@ -415,24 +438,24 @@ def plot_cum_sums(
                 x=[x[len(z) - n]],
                 y=[xmcd_cumulative[-n]],
                 mode="markers",
-                marker=dict(symbol="x", color="red"),
+                marker=dict(symbol="triangle-left", color=xmcd_cum_marker_color_ln),
                 showlegend=True,
-                name="last number",
+                name="last number value",
             )
         )
-        # Add scatter markers
         n = int(last_number_xmcd_range)
         fig_xmcd.add_trace(
             go.Scatter(
                 x=[x[len(z) - n]],
                 y=[xmcd_cumulative[-n]],
                 mode="markers",
-                marker=dict(symbol="x", color="red"),
+                marker=dict(symbol="triangle-right", color=xmcd_cum_marker_color_ln),
                 showlegend=True,
                 name="last number range",
             )
         )
 
+        xmcd_cum_marker_color = blue
         n = int(edge_divider_value)
         idx = int(len(z) / 2) + n
         fig_xmcd.add_trace(
@@ -440,12 +463,11 @@ def plot_cum_sums(
                 x=[x[idx]],
                 y=[xmcd_cumulative[idx]],
                 mode="markers",
-                marker=dict(symbol="x", color="blue"),
+                marker=dict(symbol="triangle-right", color=xmcd_cum_marker_color),
                 showlegend=True,
-                name="edge divider value",
+                name="edge div. value",
             )
         )
-
         n = int(edge_divider_range)
         idx = int(len(z) / 2) + n
         fig_xmcd.add_trace(
@@ -453,9 +475,9 @@ def plot_cum_sums(
                 x=[x[idx]],
                 y=[xmcd_cumulative[idx]],
                 mode="markers",
-                marker=dict(symbol="x", color="blue"),
+                marker=dict(symbol="triangle-left", color=xmcd_cum_marker_color),
                 showlegend=True,
-                name="edge divider range",
+                name="edge div. range",
             )
         )
         fig_xmcd.update_layout(
@@ -512,7 +534,7 @@ def plot_parameter_distributions(monte_parameters):
             # Add histogram to subplot
             # TODO use auto limits
             fig.add_trace(
-                go.Histogram(x=dist_values, marker_color="slategrey", showlegend=False),
+                go.Histogram(x=dist_values, marker_color=grey, showlegend=False),
                 row=row,
                 col=col,
             )
@@ -523,7 +545,7 @@ def plot_parameter_distributions(monte_parameters):
                 yref=f"y{(row-1)*for_grid + col}",
                 text=param_name,
                 showarrow=False,
-                font=dict(size=30),
+                font=dict(size=30, color="orange"),
                 xanchor="center",
                 yanchor="bottom",
                 y=1.1,  # Position above subplot
@@ -654,10 +676,10 @@ with col1:
 
     def color_row(row):
         colors = [
-            "background-color: blue",
-            "background-color: green",
-            "background-color: red",
-            "background-color: purple",
+            f"background-color: {blue}",
+            f"background-color: {orange}",
+            f"background-color: {cyan}",
+            f"background-color: {purple}",
         ]
         return [colors[row.name % len(colors)]] * len(row)
 
@@ -671,15 +693,13 @@ with col2:
     )
 
     # Add histograms for each parameter
-    fig.add_trace(go.Histogram(x=lz_list, name="Lz", marker_color="blue"), row=1, col=1)
+    fig.add_trace(go.Histogram(x=lz_list, name="Lz", marker_color=blue), row=1, col=1)
+    fig.add_trace(go.Histogram(x=sz_list, name="Sz", marker_color=orange), row=1, col=2)
     fig.add_trace(
-        go.Histogram(x=sz_list, name="Sz", marker_color="green"), row=1, col=2
+        go.Histogram(x=mu_tot_list, name="µtot", marker_color=cyan), row=2, col=1
     )
     fig.add_trace(
-        go.Histogram(x=mu_tot_list, name="µtot", marker_color="red"), row=2, col=1
-    )
-    fig.add_trace(
-        go.Histogram(x=mu_rat_list, name="µratio", marker_color="purple"), row=2, col=2
+        go.Histogram(x=mu_rat_list, name="µratio", marker_color=purple), row=2, col=2
     )
 
     # Update layout
