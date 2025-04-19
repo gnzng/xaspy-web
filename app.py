@@ -54,9 +54,9 @@ def define_dist(a, b, dist="normal"):
 
 
 # ---------- FILE HANDLING FUNCTIONS ----------
-def save_to_h5(file_path, data_dict, curves_dict, results_dict):
+def save_to_h5(file_path_or_buffer, data_dict, curves_dict, results_dict):
     """Save all data to an H5 file."""
-    with h5py.File(file_path, "w") as f:
+    with h5py.File(file_path_or_buffer, "w") as f:
         # Create parameters group
         params_group = f.create_group("parameters")
         for key, value in data_dict.items():
@@ -111,8 +111,8 @@ def save_to_h5(file_path, data_dict, curves_dict, results_dict):
                 results_group.attrs[key] = str(value)
 
 
-def get_h5_download_link(data_dict, curves_dict, results_dict):
-    """Generate a temporary H5 file and return a download link."""
+def get_h5_download_button(data_dict, curves_dict, results_dict):
+    """Generate a temporary H5 file and provide a Streamlit download button."""
     # Create file in memory
     with io.BytesIO() as buffer:
         save_to_h5(buffer, data_dict, curves_dict, results_dict)
@@ -123,13 +123,18 @@ def get_h5_download_link(data_dict, curves_dict, results_dict):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"xaspy_monte_carlo_{timestamp}.h5"
 
-    # Create download link
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="{filename}">Download H5 File</a>'
-    return href
+    # Create download button
+    st.download_button(
+        label="Download all results as H5 File",
+        data=base64.b64decode(b64),
+        file_name=filename,
+        mime="application/octet-stream",
+    )
+    return ""
 
 
-def get_html_download_link(fig_list, title="XASpy Monte Carlo Results"):
-    """Generate a standalone HTML file with all plots and return a download link."""
+def get_html_download_button(fig_list, title="XASpy Monte Carlo Results"):
+    """Generate a standalone HTML file with all plots and provide a Streamlit download button."""
     # Create HTML content
     html_content = f"<html><head><title>{title}</title></head><body><h1>{title}</h1>"
 
@@ -148,9 +153,14 @@ def get_html_download_link(fig_list, title="XASpy Monte Carlo Results"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"xaspy_monte_carlo_{timestamp}.html"
 
-    # Create download link
-    href = f'<a href="data:text/html;base64,{b64}" download="{filename}">Download Standalone HTML</a>'
-    return href
+    # Create download button
+    st.download_button(
+        label="Download figures as HTML",
+        data=base64.b64decode(b64),
+        file_name=filename,
+        mime="text/html",
+    )
+    return "only the plots will be saved in the html, not the parameters"
 
 
 # ---------- DATA LOADING FUNCTIONS ----------
@@ -609,6 +619,9 @@ def display_parameters_summary(all_params):
 
     st.dataframe(df_params)
 
+    st.write(
+        "Download the parameters as JSON file, which can be uploaded for future analysis."
+    )
     # JSON download button
     json_str = json.dumps(all_params, indent=2, default=str)
     st.download_button(
@@ -1181,7 +1194,7 @@ def provide_download_options(
     with col1:
         csv = results_df.to_csv(index=False)
         st.download_button(
-            label="Download Results as CSV",
+            label="Download magnetic results as CSV",
             data=csv,
             file_name="monte_carlo_results.csv",
             mime="text/csv",
@@ -1189,14 +1202,11 @@ def provide_download_options(
 
     # H5 file download
     with col2:
-        st.markdown(
-            get_h5_download_link(all_params, curves_dict, results_dict),
-            unsafe_allow_html=True,
-        )
+        get_h5_download_button(all_params, curves_dict, results_dict),
 
     # HTML download (optional)
     with col3:
-        st.markdown(get_html_download_link(all_figures), unsafe_allow_html=True)
+        get_html_download_button(all_figures)
 
 
 # ---------- MONTE CARLO SIMULATION FUNCTIONS ----------
