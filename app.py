@@ -29,7 +29,8 @@ st.title(
 # read and display the input data
 st.subheader("Input Data")
 st.write(
-    "Upload your data file. The data should be formated the following: energy, xas, xmcd, without header."
+    "Upload your data file. The data should be formated the following: energy, xas, xmcd, without header. The first column should be energy, the second column should be xas and the third column should be xmcd. The data should be in CSV format."
+    "Use at your own risk. Changing any field will rerun the simulation."
 )
 
 uploaded_file = st.file_uploader("Upload your data file")
@@ -230,6 +231,14 @@ st.write(
     "The following parameters are used for the step function and background subtraction. The values are used to generate a random distribution of the parameters."
 )
 
+if st.checkbox("Use `np.random.seed(21)` for reproducibility", value=False):
+    seed = 21
+    np.random.seed(seed)
+    logger.info(f"Using seed: {seed}")
+else:
+    seed = None
+    logger.info("No seed used for random number generation")
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     initial_step1_dist = st.number_input("Initial Step 1 Distribution", value=1.0)
@@ -326,7 +335,12 @@ for key, value in monte_parameters.items():
 
 
 sampling_size = st.number_input(
-    "Sampling Size", min_value=1, value=1000, step=1000, format="%d"
+    "Sampling Size",
+    min_value=1,
+    max_value=20000,
+    value=1000,
+    step=1000,
+    format="%d",
 )
 
 
@@ -335,7 +349,6 @@ def setup_monte_carlo_parameters(monte_parameters, sampling_size):
     Setup the parameters for the Monte Carlo Simulation.
     """
     # setup the oarameters
-    st.write("Setting up Monte Carlo Parameters...")
     whole_set = list()
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -359,7 +372,6 @@ def setup_monte_carlo_parameters(monte_parameters, sampling_size):
 
     # Clear progress bar and status text after completion
     progress_bar.empty()
-
     status_text.text(
         f"Monte Carlo Simulation parameters setup complet with {len(whole_set)} samples."
     )
