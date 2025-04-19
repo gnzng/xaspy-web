@@ -281,13 +281,14 @@ st.write(
 col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    nh_dist_value = st.number_input("Nh Dist Value", value=9.0, step=1.0)
+    nh_dist_value = st.number_input("Nh Dist Value", value=4.0, step=1.0)
     nh_dist_function = st.selectbox("Nh Dist Function", ("normal", "uniform", None))
+    nh_dist_variance = st.number_input("Nh Dist Value", value=0.1, step=0.01)
 
 with col2:
     tz_dist_value = st.number_input("Tz Dist Value", value=0.0, step=0.1)
     tz_dist_function = st.selectbox("Tz Dist Function", ("normal", "uniform", None))
-    tz_dist_variance = st.number_input("Tz Dist Variance", value=0.1)
+    tz_dist_variance = st.number_input("Tz Dist Variance", value=0.1, step=0.1)
 
 with col3:
     last_number_xas_value = st.number_input("Last Number XAS Value", value=1)
@@ -302,7 +303,7 @@ with col5:
     edge_divider_range = st.number_input("Edge Divider Range", value=5)
 
 # Update monte_parameters dictionary with user inputs
-monte_parameters["nh_dist"] = (nh_dist_value, None, nh_dist_function)
+monte_parameters["nh_dist"] = (nh_dist_value, nh_dist_variance, nh_dist_function)
 monte_parameters["tz_dist"] = (tz_dist_value, tz_dist_variance, tz_dist_function)
 monte_parameters["last_number_xas_dist"] = (
     last_number_xas_value,
@@ -828,7 +829,7 @@ with col3:
 
 
 # Add a download button for the results
-st.subheader("Download Results")
+st.subheader("Download Results and Parameters")
 csv = results_df.to_csv(index=False)
 st.download_button(
     label="Download Results as CSV",
