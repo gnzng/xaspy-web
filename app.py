@@ -44,7 +44,7 @@ def define_dist(a, b, dist="normal"):
     if dist == "normal":
         return np.random.normal(a, b)
     elif dist == "randint":
-        return np.random.randint(a, b)
+        return np.random.randint(a, b + 1)
     elif dist == "uniform":
         return np.random.uniform(a, b)
     else:
@@ -173,6 +173,10 @@ def load_data(uploaded_file):
         # Check if data has exactly 3 columns
         if data.shape[1] != 3:
             st.error("CSV must contain exactly 3 columns: 'energy', 'xas', 'xmcd'")
+            st.stop()
+        # Check if all columns are numeric
+        if not all(pd.api.types.is_numeric_dtype(data[col]) for col in data.columns):
+            st.error("All columns in the CSV must be numeric.")
             st.stop()
 
         # Validate columns before proceeding
@@ -1377,12 +1381,17 @@ def main():
         st.stop()
 
     # Load and process data
-    data = load_data(uploaded_file)
-    x, y, z, show_energy_trace, plot_column, flip_xmcd = display_data_preview(
-        data, flip_xmcd=saved_params.get("flip_xmcd", False) if saved_params else False
-    )
-    data_plot = plot_data(x, y, z, show_energy_trace, plot_column)
-
+    try:
+        data = load_data(uploaded_file)
+        x, y, z, show_energy_trace, plot_column, flip_xmcd = display_data_preview(
+            data,
+            flip_xmcd=saved_params.get("flip_xmcd", False) if saved_params else False,
+        )
+        data_plot = plot_data(x, y, z, show_energy_trace, plot_column)
+    except Exception as e:
+        st.error(f"Error loading data: {str(e)}")
+        logger.error(f"Error loading data: {str(e)}")
+        st.stop()
     # Get step function parameters
     initial_step1, initial_step2, initial_slope, initial_branching = (
         get_step_function_parameters(saved_params)
