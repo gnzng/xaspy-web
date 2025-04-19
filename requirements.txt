@@ -4,3 +4,4 @@ pandas
 plotly
 loguru
 xaspy
+h5py
