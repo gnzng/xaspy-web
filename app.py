@@ -1355,18 +1355,6 @@ def main():
     st.title(
         "XASpy: Monte Carlo Simulation of Dichroism X-ray Absorption Spectroscopy Sum Rule Analysis"
     )
-
-    # Parameter upload option
-    st.subheader("Upload Parameters (Optional)")
-    param_file = st.file_uploader(
-        "Upload a parameter JSON file to restore settings", type=["json"]
-    )
-    saved_params = None
-    if param_file is not None:
-        saved_params = load_parameters_from_json(param_file)
-
-    # Load input data
-    st.subheader("Input Data")
     st.write(
         "Upload your data file. The data should be formatted as follows: energy, xas, xmcd, without header. "
         "The first column should be energy, the second column should be xas and the third column should be xmcd. "
@@ -1374,7 +1362,22 @@ def main():
         "Use at your own risk. Changing any field will rerun the simulation."
     )
 
-    uploaded_file = st.file_uploader("Upload your data file", type=["csv", "txt"])
+    upload_col1, upload_col2 = st.columns(2)
+    with upload_col1:
+        # Load input data
+        st.subheader("Spectrum Input Data")
+        uploaded_file = st.file_uploader(
+            "Upload your data file", type=["csv", "txt", "dat"]
+        )
+    with upload_col2:
+        # Parameter upload option
+        st.subheader("Upload Parameters (Optional)")
+        param_file = st.file_uploader(
+            "Upload a parameter JSON file to restore settings", type=["json"]
+        )
+        saved_params = None
+        if param_file is not None:
+            saved_params = load_parameters_from_json(param_file)
 
     if uploaded_file is None:
         st.warning("Please upload a data file to proceed.")
