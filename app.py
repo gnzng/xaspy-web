@@ -334,14 +334,22 @@ for key, value in monte_parameters.items():
     logger.info(f"  {key}: {value}")
 
 
-sampling_size = st.number_input(
-    "Sampling Size",
-    min_value=1,
-    max_value=20000,
-    value=1000,
-    step=1000,
-    format="%d",
-)
+colsampling_size, _, _, _, _ = st.columns(5)
+
+with colsampling_size:
+    st.write(
+        "Sampling size input for Monte Carlo. For adjusting ~100, for full simulation ~10000."
+    )
+    sampling_size = st.number_input(
+        "Sampling Size",
+        min_value=1,
+        max_value=20000,
+        value=100,
+        step=1000,
+        format="%d",
+        key="sampling_size",
+        help="Number of samples to generate for the Monte Carlo simulation. Higher values will take longer to compute. Recommended highest value is 10000.",
+    )
 
 
 def setup_monte_carlo_parameters(monte_parameters, sampling_size):
