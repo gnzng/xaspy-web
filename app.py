@@ -246,6 +246,7 @@ def get_step_function_parameters(saved_params=None):
                 else 708.0
             ),
             step=0.1,
+            help="Initial step for the first step function in eV",
         )
     with col2:
         initial_step2 = st.number_input(
@@ -256,6 +257,7 @@ def get_step_function_parameters(saved_params=None):
                 else 721.0
             ),
             step=0.1,
+            help="Initial step for the second step function in eV",
         )
     with col3:
         initial_slope = st.number_input(
@@ -272,6 +274,8 @@ def get_step_function_parameters(saved_params=None):
                 if saved_params
                 else 0.33
             ),
+            step=0.1,
+            help="Initial branching ratio for the step function",
         )
 
     logger.info(
@@ -314,6 +318,8 @@ def get_distribution_parameters(
                 if saved_params
                 else 1.0
             ),
+            step=0.1,
+            help="Distribution parameter for the first step function in eV",
         )
         initial_step1_dist_function = st.selectbox(
             "Initial Step 1 Distribution Function",
@@ -323,6 +329,7 @@ def get_distribution_parameters(
                 if saved_params
                 else "normal"
             ),
+            help="Distribution function for the first step function",
         )
 
     with col2:
@@ -333,6 +340,8 @@ def get_distribution_parameters(
                 if saved_params
                 else 1.0
             ),
+            step=0.1,
+            help="Distribution parameter for the second step function in eV",
         )
         initial_step2_dist_function = st.selectbox(
             "Initial Step 2 Distribution Function",
@@ -342,6 +351,7 @@ def get_distribution_parameters(
                 if saved_params
                 else "normal"
             ),
+            help="Distribution function for the second step function",
         )
 
     with col3:
@@ -352,6 +362,8 @@ def get_distribution_parameters(
                 if saved_params
                 else 1.0
             ),
+            step=0.1,
+            help="Distribution parameter for the slope of the step functions",
         )
         initial_slope_dist_function = st.selectbox(
             "Initial Slope Distribution Function",
@@ -371,6 +383,8 @@ def get_distribution_parameters(
                 if saved_params
                 else 0.1
             ),
+            step=0.1,
+            help="Distribution parameter for the branching ratio of the step functions",
         )
         initial_branching_dist_function = st.selectbox(
             "Initial Branching Distribution Function",
@@ -380,6 +394,7 @@ def get_distribution_parameters(
                 if saved_params
                 else None
             ),
+            help="Distribution function for the branching ratio of the step functions",
         )
 
     dist_params = {
@@ -425,6 +440,7 @@ def get_sum_rule_parameters(saved_params=None):
                 float(saved_params.get("nh_dist_value", 4.0)) if saved_params else 4.0
             ),
             step=1.0,
+            help="Number of electron holes distribution value for the sum rule analysis",
         )
         nh_dist_function = st.selectbox(
             "Nh Dist Function",
@@ -434,6 +450,7 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else "normal"
             ),
+            help="Distribution function for the number of electron holes distribution",
         )
         nh_dist_variance = st.number_input(
             "Nh Dist Variance",
@@ -442,7 +459,8 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else 0.1
             ),
-            step=0.01,
+            step=0.1,
+            help="Distribution parameter for the number of electron holes distribution",
         )
 
     with col2:
@@ -452,6 +470,7 @@ def get_sum_rule_parameters(saved_params=None):
                 float(saved_params.get("tz_dist_value", 0.0)) if saved_params else 0.0
             ),
             step=0.1,
+            help="Tz value for the sum rule analysis",
         )
         tz_dist_function = st.selectbox(
             "Tz Dist Function",
@@ -461,6 +480,7 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else "normal"
             ),
+            help="Distribution function for the Tz value in the sum rule analysis",
         )
         tz_dist_variance = st.number_input(
             "Tz Dist Variance",
@@ -470,6 +490,7 @@ def get_sum_rule_parameters(saved_params=None):
                 else 0.1
             ),
             step=0.1,
+            help="Distribution parameter for the Tz value in the sum rule analysis",
         )
 
     with col3:
@@ -478,6 +499,8 @@ def get_sum_rule_parameters(saved_params=None):
             value=(
                 int(saved_params.get("last_number_xas_value", 1)) if saved_params else 1
             ),
+            step=1,
+            help="Last number to be considered for XAS sum in the sum rule analysis (index), counting from the end",
         )
         last_number_xas_range = st.number_input(
             "Last Number XAS Range",
@@ -486,6 +509,8 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else 10
             ),
+            step=1,
+            help="Last number on the left to be considered for XAS sum in the sum rule analysis (index), counting from the end",
         )
 
     with col4:
@@ -496,6 +521,8 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else 1
             ),
+            step=1,
+            help="Last number to be considered for XMCD sum in the sum rule analysis (index), counting from the end",
         )
         last_number_xmcd_range = st.number_input(
             "Last Number XMCD Range",
@@ -504,6 +531,8 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else 3
             ),
+            step=1,
+            help="Last number to the left to be considered for XMCD sum in the sum rule analysis (index), counting from the end",
         )
 
     with col5:
@@ -514,10 +543,14 @@ def get_sum_rule_parameters(saved_params=None):
                 if saved_params
                 else -20
             ),
+            step=1,
+            help="Edge divider value for the sum rule analysis (index), counting from the center",
         )
         edge_divider_range = st.number_input(
             "Edge Divider Range",
             value=int(saved_params.get("edge_divider_range", 5)) if saved_params else 5,
+            step=1,
+            help="Edge divider on the right for the sum rule analysis (index), counting from the center",
         )
 
     sum_rule_params = {
@@ -589,6 +622,7 @@ def get_additional_parameters(saved_params=None):
             "g-factor",
             value=int(saved_params.get("g_factor", 2)) if saved_params else 2,
             step=1,
+            help="g-factor for the sum rule analysis",
         )
 
     with col2:
@@ -597,6 +631,7 @@ def get_additional_parameters(saved_params=None):
             "c=1 for p -> d, c=2 for d -> f",
             value=int(saved_params.get("c_factor", 1)) if saved_params else 1,
             step=1,
+            help="c-factor for the sum rule analysis",
         )
 
     l_value = c + 1
