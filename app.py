@@ -1,15 +1,16 @@
-import streamlit as st
+import base64
+import io
+import json
+from datetime import datetime
+
+import h5py
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from loguru import logger
-import json
-import io
-import h5py
-import base64
-from datetime import datetime
 import plotly.io as pio
+import streamlit as st
+from loguru import logger
+from plotly.subplots import make_subplots
 
 from xaspy.xas.polarized import Lz_cumsum, Sz_cumsum
 from xaspy.xas.backgrounds import step
