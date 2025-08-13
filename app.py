@@ -235,7 +235,12 @@ def display_data_preview(data, flip_xmcd=False):
 
 def get_step_function_parameters(saved_params=None):
     """Get parameters for step function background subtraction."""
-    st.subheader("Parameters for Step Function as Background Subtraction")
+    st.subheader(
+        "Parameters for Step Function as Background Subtraction. If you would"
+        + " like to use the raw provided spectrum, choose higher energies than the dataset."
+    )
+    # TODO: make that skippable without that workaround
+
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
