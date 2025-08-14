@@ -16,7 +16,7 @@ from xaspy.xas.polarized import Lz_cumsum, Sz_cumsum
 from xaspy.xas.backgrounds import step
 from xaspy.utils.utils import cumtrapz
 
-# ---------- CONSTANTS ----------
+# ---------- COLORS ----------
 COLORS = {
     "blue": "#0074D9",
     "orange": "#FF851B",
@@ -1312,7 +1312,7 @@ def run_monte_carlo_simulation(x, y, z, whole_set, g, c, l_value):
             )
 
             lz = Lz_cumsum(
-                z,
+                cumtrapz(z, x),
                 xas_corr_cs,
                 c=c,
                 l=l_value,
@@ -1322,7 +1322,7 @@ def run_monte_carlo_simulation(x, y, z, whole_set, g, c, l_value):
             )
 
             sz = Sz_cumsum(
-                z,
+                cumtrapz(z, x),
                 xas_corr_cs,
                 c=c,
                 l=l_value,
