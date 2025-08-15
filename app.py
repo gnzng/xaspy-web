@@ -626,8 +626,8 @@ def get_additional_parameters(saved_params=None):
         # g-factor
         g = st.number_input(
             "g-factor",
-            value=int(saved_params.get("g_factor", 2)) if saved_params else 2,
-            step=1,
+            value=saved_params.get("g_factor", 2.0) if saved_params else 2.0,
+            step=0.01,
             help="g-factor for the sum rule analysis",
         )
 
