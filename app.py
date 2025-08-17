@@ -233,7 +233,7 @@ def display_data_preview(data, flip_xmcd=False):
         return x, y, z, show_energy_trace, col2, flip_xmcd
 
 
-def get_step_function_parameters(saved_params=None):
+def get_step_function_parameters(saved_params=None, x=None, y=None):
     """Get parameters for step function background subtraction."""
     st.subheader(
         "Parameters for Step Function as Background Subtraction. If you would"
@@ -241,15 +241,29 @@ def get_step_function_parameters(saved_params=None):
     )
     # TODO: make that skippable without that workaround
 
+    # Guess the initial_step1 and initial_step2 by just taking the energy at the maximum
+    # and add 15 eV for a first estimation
+
+    try:
+        initial_step1_guess = float(x[np.argmax(y)])
+        initial_step2_guess = initial_step1_guess + 15.0
+
+    except Exception as e:
+        logger.warning(
+            f"Error estimating initial steps: {str(e)}. Using Fe L23 energies."
+        )
+        initial_step1_guess = 708.0
+        initial_step2_guess = 721.0
+
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
         initial_step1 = st.number_input(
             "Initial Step 1",
             value=(
-                float(saved_params.get("initial_step1", 708.0))
+                float(saved_params.get("initial_step1", initial_step1_guess))
                 if saved_params
-                else 708.0
+                else initial_step1_guess
             ),
             step=0.1,
             help="Initial step for the first step function in eV",
@@ -258,9 +272,9 @@ def get_step_function_parameters(saved_params=None):
         initial_step2 = st.number_input(
             "Initial Step 2",
             value=(
-                float(saved_params.get("initial_step2", 721.0))
+                float(saved_params.get("initial_step2", initial_step2_guess))
                 if saved_params
-                else 721.0
+                else initial_step2_guess
             ),
             step=0.1,
             help="Initial step for the second step function in eV",
@@ -1446,7 +1460,7 @@ def main():
         st.stop()
     # Get step function parameters
     initial_step1, initial_step2, initial_slope, initial_branching = (
-        get_step_function_parameters(saved_params)
+        get_step_function_parameters(saved_params, x, y)
     )
 
     # Display step function plot
