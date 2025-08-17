@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xaspy-web"
+version = "0.1.0"
+description = "Viewing xaspy in a web interface for sum rule analysis."
+readme = "README.md"
+authors = [
+    {name = "Damian Guenzing", email = "dguenzing@lbl.gov"}
+]
+maintainers = [
+    {name = "Damian Guenzing", email = "dguenzing@lbl.gov"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+license = "MIT"
+dependencies = [
+    "streamlit",
+    "numpy",
+    "pandas",
+    "plotly",
+    "loguru",
+    "xaspy",
+    "h5py"
+]
+
+[project.urls]
+bugs = "https://github.com/gnzng/xaspy-web/issues"
+changelog = "https://github.com/gnzng/xaspy-web/blob/master/changelog.md"
+homepage = "https://github.com/gnzng/xaspy-web"
+
+[tool.setuptools]
+packages = ["xaspy-web"]
+
+[project.scripts]
+xaspy-web = "xaspy_web.cli:main"
+
+[compatibility]
+# Set the desired Python version.
+# Streamlit Cloud supports Python 3.8, 3.9, 3.10, 3.11, and 3.12.
+# Choose a version that is compatible with all your dependencies.
+python_version = "3.10" # Or "3.9", "3.11", "3.12"
